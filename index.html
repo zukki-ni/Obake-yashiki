@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>スタンプラリー</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            background-color: #000;
+            color: #fff;
+        }
+        .stamp-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .stamp-box {
+            width: 80px;
+            height: 80px;
+            border: 2px solid #555;
+            line-height: 80px;
+            font-size: 24px;
+            border-radius: 10px;
+            background-color: #222;
+        }
+        .stamped {
+            background-color: #8b0000; /* お化け屋敷に合わせた暗い赤 */
+            color: white;
+            border-color: #ff0000;
+        }
+        /* QR4用の全画面表示スタイル */
+        #scare {
+            display: none;
+            font-size: 80px;
+            color: red;
+            font-weight: bold;
+            height: 100vh;
+            line-height: 100vh;
+            background-color: black;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+        #main-content {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="scare">うしろ</div>
+
+    <div id="main-content">
+        <h1 id="title">スタンプラリー</h1>
+        <p id="message">読み込み中...</p>
+        
+        <div class="stamp-container">
+            <div class="stamp-box" id="stamp-1">1</div>
+            <div class="stamp-box" id="stamp-2">2</div>
+            <div class="stamp-box" id="stamp-3">3</div>
+        </div>
+        
+        <div id="goal-message" style="display: none; margin-top: 30px; color: gold; font-size: 24px; font-weight: bold;">
+            コンプリート！景品を受け取ってくれ。
+        </div>
+    </div>
+
+    <script>
+        // URLから "?id=番号" を取得する
+        const urlParams = new URLSearchParams(window.location.search);
+        const qrId = urlParams.get('id');
+
+        // sessionStorageを使ってタブを閉じたら消えるようにデータを保存・取得
+        let stamps = JSON.parse(sessionStorage.getItem('stamps')) || { 1: false, 2: false, 3: false };
+
+        const scareDiv = document.getElementById('scare');
+        const mainContent = document.getElementById('main-content');
+        const messageEl = document.getElementById('message');
+        const goalMessage = document.getElementById('goal-message');
+
+        if (qrId === '4') {
+            // QR4の場合: 「うしろ」だけ表示して終了
+            scareDiv.style.display = 'block';
+            document.body.style.padding = '0';
+        } else {
+            // それ以外の場合: 通常のスタンプラリー画面を表示
+            mainContent.style.display = 'block';
+
+            if (qrId === '1' || qrId === '2' || qrId === '3') {
+                if (!stamps[qrId]) {
+                    stamps[qrId] = true;
+                    sessionStorage.setItem('stamps', JSON.stringify(stamps));
+                    messageEl.textContent = `スタンプ${qrId}を取得した。`;
+                } else {
+                    messageEl.textContent = `スタンプ${qrId}は取得済みだ。`;
+                }
+            } else if (qrId === '5') {
+                document.getElementById('title').textContent = '最終確認';
+                messageEl.textContent = '現在のスタンプ取得状況だ。';
+            } else {
+                messageEl.textContent = 'QRコードを読み込んでスタンプを集めろ。';
+            }
+
+            // スタンプのUI更新と取得数のカウント
+            let count = 0;
+            for (let i = 1; i <= 3; i++) {
+                if (stamps[i]) {
+                    const box = document.getElementById(`stamp-${i}`);
+                    box.classList.add('stamped');
+                    box.textContent = '済';
+                    count++;
+                }
+            }
+
+            // QR5の時だけ、全て揃っているかの判定と景品メッセージを表示
+            if (qrId === '5') {
+                if (count === 3) {
+                    goalMessage.style.display = 'block';
+                } else {
+                    messageEl.textContent += ` まだ${3 - count}個足りない。`;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
